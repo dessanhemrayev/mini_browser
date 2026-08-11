@@ -36,11 +36,12 @@ jobs:
           path: dist/mini_browser*
 
       - name: Create GitHub Release
+        if: ${{ github.event_name != 'pull_request' }}
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: mini_browser-${{ github.run_number }}
+          tag_name: v${{ github.run_id }}
+          release_name: mini_browser-${{ github.run_id }}
           body: Release from workflow run ${{ github.run_id }}
           draft: false
           prerelease: false
@@ -48,6 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload binary to Release
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -87,11 +89,12 @@ jobs:
           path: dist\mini_browser.exe
 
       - name: Create GitHub Release for Windows
+        if: ${{ github.event_name != 'pull_request' }}
         id: create_release_win
         uses: actions/create-release@v1
         with:
-          tag_name: v${{ github.run_number }}-win
-          release_name: mini_browser-${{ github.run_number }}-win
+          tag_name: v${{ github.run_id }}-win
+          release_name: mini_browser-${{ github.run_id }}-win
           body: Windows release from workflow run ${{ github.run_id }}
           draft: false
           prerelease: false
@@ -99,6 +102,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows binary to Release
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release_win.outputs.upload_url }}
