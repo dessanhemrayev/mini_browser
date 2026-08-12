@@ -12,7 +12,16 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary_name: mini_browser
+            artifact_name: mini_browser-linux
+          - os: windows-latest
+            binary_name: mini_browser.exe
+            artifact_name: mini_browser-windows
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,65 +38,35 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
+        shell: bash
         run: |
           pyinstaller --noconfirm --onefile --name mini_browser main.py
 
-      - name: Upload artifact
+      - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mini_browser-build
-          path: dist/mini_browser*
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.binary_name }}
+
+  release:
+    needs: build
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
 
       - name: Create GitHub Release
-        if: ${{ github.event_name != 'pull_request' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_id }}
           name: mini_browser-${{ github.run_id }}
           body: Release from workflow run ${{ github.run_id }}
-          files: dist/mini_browser
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-windows:
-    runs-on: windows-latest
-    needs: build
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build with PyInstaller (Windows)
-        shell: powershell
-        run: |
-          pyinstaller --noconfirm --onefile --name mini_browser main.py
-
-      - name: Upload artifact (Windows)
-        uses: actions/upload-artifact@v4
-        with:
-          name: mini_browser-build-windows
-          path: dist\mini_browser.exe
-
-      - name: Create GitHub Release for Windows
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_id }}-win
-          name: mini_browser-${{ github.run_id }}-win
-          body: Windows release from workflow run ${{ github.run_id }}
-          files: dist\mini_browser.exe
+          files: |
+            release-assets/**/mini_browser
+            release-assets/**/mini_browser.exe
           draft: false
           prerelease: false
         env:
