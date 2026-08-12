@@ -9,19 +9,31 @@ def create_browser_ui(page: ft.Page):
     browser_placeholder = ft.Text("Просмотр сайта:", size=14)
     webview = None
 
+    webview_available = True
+
     def set_browser_url(url):
-        nonlocal webview
+        nonlocal webview, webview_available
         if not url.startswith("http"):
             url = "https://" + url
+
+        if not webview_available:
+            browser_placeholder.value = "Встроенный просмотр недоступен. Открываю ссылку в браузере."
+            browser_placeholder.update()
+            page.launch_url(url)
+            return
+
         try:
             if webview is None:
-                webview = ft.WebView(src=url, expand=True)
+                webview = ft.WebView(url=url, expand=True)
                 page.add(webview)
             else:
-                webview.src = url
+                webview.url = url
                 webview.update()
+            browser_placeholder.value = f"Просмотр сайта: {url}"
+            browser_placeholder.update()
         except Exception:
-            browser_placeholder.value = "Встроенный просмотр недоступен в этой сборке. Открываю ссылку в браузере."
+            webview_available = False
+            browser_placeholder.value = "Встроенный просмотр недоступен. Открываю ссылку в браузере."
             browser_placeholder.update()
             page.launch_url(url)
 

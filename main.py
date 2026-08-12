@@ -54,4 +54,4 @@ def main(page: ft.Page):
     page.add(view)
 
 
-ft.app(main)
+ft.app(main, view=ft.AppView.FLET_APP)
