@@ -7,6 +7,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -37,25 +40,14 @@ jobs:
 
       - name: Create GitHub Release
         if: ${{ github.event_name != 'pull_request' }}
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_id }}
-          release_name: mini_browser-${{ github.run_id }}
+          name: mini_browser-${{ github.run_id }}
           body: Release from workflow run ${{ github.run_id }}
+          files: dist/mini_browser
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload binary to Release
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/mini_browser
-          asset_name: mini_browser
-          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,24 +82,13 @@ jobs:
 
       - name: Create GitHub Release for Windows
         if: ${{ github.event_name != 'pull_request' }}
-        id: create_release_win
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_id }}-win
-          release_name: mini_browser-${{ github.run_id }}-win
+          name: mini_browser-${{ github.run_id }}-win
           body: Windows release from workflow run ${{ github.run_id }}
+          files: dist\mini_browser.exe
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows binary to Release
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release_win.outputs.upload_url }}
-          asset_path: dist\mini_browser.exe
-          asset_name: mini_browser.exe
-          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
